@@ -4,8 +4,8 @@ The CampaignMakerGUI is a small RAG project with the primary goal of aiding Game
 The project is currently a proof of concept and will undergo significant development in the coming weeks.
 
 ## Current Features:
-- Currently supports systematic character and places creation.
-- Other requests are categorized as “other” (implying they are not yet supported).
+- Currently supports systematic character, places, items and quests creation.
+- Other requests are categorized as “other”.
   
 ## Interface Components:
 - Current File Window: Displays the content of existing files and allows editing.
@@ -27,7 +27,11 @@ The project is currently a proof of concept and will undergo significant develop
 
 Users will be prompted to provide an OpenAI API key when running main.py for the first time.
 
+## Installation:
+- Put the CMGUI.exe file and the prompt.ini file and add them both to a directory.
+- Launch CMGUI.exe
+- Give a valid openai API key when prompted
 
 ## Roadmap:
-- Expanding to include different types of lore (monsters, items, quests, etc.).
+- Expanding to include different types of lore (monsters, history, etc.).
 - Allowing users to customize the type and format of generated lore.
