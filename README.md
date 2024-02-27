@@ -29,7 +29,5 @@ Users will be prompted to provide an OpenAI API key when running main.py for the
 
 
 ## Roadmap:
-- Making the tool executable.
-- Adding French language support.
 - Expanding to include different types of lore (monsters, items, quests, etc.).
 - Allowing users to customize the type and format of generated lore.
