@@ -35,3 +35,6 @@ Users will be prompted to provide an OpenAI API key when running main.py for the
 ## Roadmap:
 - Expanding to include different types of lore (monsters, history, etc.).
 - Allowing users to customize the type and format of generated lore.
+- Add picture generation for any item.
+- Add the possibility to select a setting type.
+- Include the ini files inside the executable.
