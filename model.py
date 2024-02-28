@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import utils
 import custom_tools as ct
+import json
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 # Initiate the conversation
@@ -13,7 +14,26 @@ def initiate_conversation():
     config = utils.get_properties()
 
     # Writing the system prompt
-    systemPrompt = config.get('section2','system.prompt')
+    systemPrompt = config.get('section1','system.prompt')
+
+    # Add the available functions to the system prompt
+    function_files = utils.list_files('.\\campaign\\functions')
+    available_functions_list = []
+    for file in function_files:
+        with open(file, 'r') as file:
+            txtContent = file.read()
+        jsonContent = json.loads(txtContent)
+        available_functions_list.append(jsonContent["function"]["name"])
+    available_functions = ', '.join(available_functions_list)
+
+    systemPrompt += f" The only existing function are {available_functions}, always call one of those functions. "
+
+    # Add the setting to the system prompt
+    if os.path.exists(".\\campaign\\settings.txt"):
+        with open(".\\campaign\\settings.txt", "r") as file:
+            settings = file.read()
+        systemPrompt += f"The setting of the TTRPG is {settings}"
+
     messages=[
             {"role": "system", "content": systemPrompt}
         ]
@@ -47,7 +67,8 @@ def create_prompt(user_text):
 # Search recursively for the file in the campaign folder
 def findMatchingFiles(user_text):
     contextContent = ""
-    for root, dirs, files in os.walk("./campaign"):
+    files = utils.list_files()
+    for root, dirs, files in os.walk(".\\campaign"):
         for file in files:
             file_name = file.split('.')[0]  # Remove file extension
             file_name = file_name.replace('_', ' ')

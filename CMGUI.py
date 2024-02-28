@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QMessageBox
 import model
 import json
 import utils
+import prompt
+import functions
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -16,7 +18,7 @@ class MainWindow(QMainWindow):
         utils.list_files()
 
         self.fileList = QListWidget()
-        self.current_dir = "./campaign"
+        self.current_dir = ".\\campaign"
         self.updateFileList(self.current_dir)
         self.current_file_path = None
 
@@ -125,7 +127,7 @@ class MainWindow(QMainWindow):
     def updateFileList(self, directory):
         self.fileList.clear()
         files = os.listdir(directory)
-        if self.current_dir != "./campaign":
+        if self.current_dir != ".\\campaign":
             self.fileList.addItem("...")  # Add '...' to the fileList
         for file in files:
             self.fileList.addItem(file)
@@ -185,14 +187,23 @@ class MainWindow(QMainWindow):
     # Function to initialize the directories and openai api key
     def initialChecklist(self):
 
-        # Create the directory and subdirectories
-        os.makedirs("./campaign", exist_ok=True)
-        os.makedirs("./campaign/places", exist_ok=True)
-        os.makedirs("./campaign/characters", exist_ok=True)
-        os.makedirs("./campaign/items", exist_ok=True)
-        os.makedirs("./campaign/quests", exist_ok=True)
-        os.makedirs("./campaign/others", exist_ok=True)
-        
+        # Create the prompt.ini file
+        prompt.createPromptIni()
+
+        # Create the campaign directory and functions subdirectory
+        os.makedirs(".\\campaign", exist_ok=True)
+        os.makedirs(".\\campaign\\others", exist_ok=True)
+        os.makedirs(".\\campaign\\functions", exist_ok=True)
+        functions.createFunctionsIni()
+
+        # Create the settings.txt file
+        if not os.path.exists(".\\campaign\\settings.txt"):
+            with open(".\\campaign\\settings.txt", "w") as file:
+                file.write('generic TTRPG')
+
+        # Create the directories for the campaign from the functions files
+        utils.createDirectoriesFromFunctions()
+
         # Check that the .env file exists
         if not os.path.exists(".env"):
             # Asking the user for the openai api key

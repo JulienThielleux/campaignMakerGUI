@@ -37,13 +37,20 @@ def prune_messages(messages):
             break
     return messages
 
-def list_files():
-    # List the files in the campaign directory recursively
-
-    path = "./campaign"
+def list_files(path = ".\\campaign"):
+    # List the files in the directory recursively
     files = []
     for r, d, f in os.walk(path):
         for file in f:
             files.append(os.path.join(r, file))
     print(files)
     return files
+
+def createDirectoriesFromFunctions():
+    files = list_files('.\\campaign\\functions')
+
+    # create a directory in the campaign folder for each file
+    for file in files:
+        file_name = file.split('\\')[-1].split('.')[0]
+        if not os.path.isdir(f'.\\campaign\\{file_name}'):
+            os.mkdir(f'.\\campaign/{file_name}')
