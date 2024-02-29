@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QHBoxLayout, QPushButton, QInputDialog, QWidget, QListWidget, QPlainTextEdit, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QBuffer, QIODevice
 import os
 from PyQt5.QtWidgets import QMessageBox
 import model
 import json
 import utils
-import prompt
+import settings
 import functions
+from PyQt5.QtGui import QPixmap
+import urllib.request
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -25,8 +27,20 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Campaign maker GUI")
 
         mainLayout = QHBoxLayout()
+        pictureLayout = QVBoxLayout()
         textLayout = QVBoxLayout()
         fileLayout = QVBoxLayout()
+
+        # Picture of the current piece of lore
+        self.picture = QLabel()
+
+        # Button to save the current picture
+        self.button_save_picture = QPushButton("Save picture")
+        self.button_save_picture.clicked.connect(self.savePicture)
+
+        # Button to generate a new picture
+        self.button_generate_picture = QPushButton("Generate picture")
+        self.button_generate_picture.clicked.connect(self.generatePicture)
 
         # Text editor for the current viewed file.
         self.textEdit_top = QPlainTextEdit()
@@ -70,6 +84,14 @@ class MainWindow(QMainWindow):
         self.button_save.clicked.connect(self.saveText)
 
 
+        # Creation of the picture layout
+        pictureLayout.addWidget(self.picture)
+
+        pictureLayout.addWidget(self.button_save_picture)
+
+        pictureLayout.addWidget(self.button_generate_picture)
+
+
         # Creation of the window layout
         textLayout.addWidget(title_top)
         textLayout.addWidget(self.textEdit_top,8)
@@ -85,14 +107,16 @@ class MainWindow(QMainWindow):
         textLayout.addWidget(self.textEdit_bottom,1)
 
         textLayout.addWidget(self.button_validate)
-        
 
 
+        # Creation of the file layout
         fileLayout.addWidget(title_files)
         fileLayout.addWidget(self.fileList, alignment=Qt.AlignRight)
         fileLayout.addWidget(self.button_save, alignment=Qt.AlignLeft)
 
 
+        # Adding the layouts to the main layout
+        mainLayout.addLayout(pictureLayout,3)
         mainLayout.addLayout(textLayout,3)
         mainLayout.addLayout(fileLayout,1)
 
@@ -122,6 +146,10 @@ class MainWindow(QMainWindow):
 
         with open(file_path, 'r') as file:
             self.textEdit_top.setPlainText(file.read())
+        
+        # Update the picture
+        picture_path = file_path.replace('.txt', '.png')
+        self.picture.setPixmap(QPixmap(picture_path))
 
     # Function to update the list of files in the working directory.
     def updateFileList(self, directory):
@@ -130,7 +158,8 @@ class MainWindow(QMainWindow):
         if self.current_dir != ".\\campaign":
             self.fileList.addItem("...")  # Add '...' to the fileList
         for file in files:
-            self.fileList.addItem(file)
+            if not file.endswith('.png'):
+                self.fileList.addItem(file)
 
     # Function to open a directory from the working directory.
     def openDirectory(self, item):
@@ -174,12 +203,13 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.information(self, 'Information', 'Nothing to save.')
 
-    # Function to send the text from the history to the current file.
+    # Function to send the text from the model to the current file.
     def sendToCurrent(self):
         center_text = self.textEdit_center.toPlainText()
         self.textEdit_top.setPlainText(center_text)
         self.current_file_path = None
 
+    # Function to clear the current file.
     def clearCurrent(self):
         self.textEdit_top.clear()
         self.current_file_path = None
@@ -187,19 +217,14 @@ class MainWindow(QMainWindow):
     # Function to initialize the directories and openai api key
     def initialChecklist(self):
 
-        # Create the prompt.ini file
-        prompt.createPromptIni()
+        # Create the settings.ini file
+        settings.createSettingsIni()
 
         # Create the campaign directory and functions subdirectory
         os.makedirs(".\\campaign", exist_ok=True)
         os.makedirs(".\\campaign\\others", exist_ok=True)
         os.makedirs(".\\campaign\\functions", exist_ok=True)
         functions.createFunctionsIni()
-
-        # Create the settings.txt file
-        if not os.path.exists(".\\campaign\\settings.txt"):
-            with open(".\\campaign\\settings.txt", "w") as file:
-                file.write('generic TTRPG')
 
         # Create the directories for the campaign from the functions files
         utils.createDirectoriesFromFunctions()
@@ -215,13 +240,34 @@ class MainWindow(QMainWindow):
             else:
                 QMessageBox.information(self, 'Information', 'The program will not work without the openai api key.')
 
+    # Function to generate a picture from the current file
+    def generatePicture(self):
+        if self.current_file_path:
+            picture_url = model.generatePicture(self.client, self.current_file_path)
+            data = urllib.request.urlopen(picture_url).read()
+
+            buffer = QBuffer()
+            buffer.open(QIODevice.ReadWrite)
+            buffer.write(data)
+            buffer.seek(0)
+
+            pixmap = QPixmap()
+            pixmap.loadFromData(buffer.readAll())
+            self.picture.setPixmap(QPixmap(pixmap))
+        else:
+            QMessageBox.information(self, 'Information', 'Save before generating a picture.')
+
+    # Function to save the current picture
+    def savePicture(self):
+        if self.current_file_path:
+            picture_path = self.current_file_path.replace('.txt', '.png')
+            pixmap = self.picture.pixmap()
+            pixmap.save(picture_path)
+            QMessageBox.information(self, 'Information', 'Picture saved.')
+        else:
+            QMessageBox.information(self, 'Information', 'Save before saving a picture.')
+
 def main():
-    """
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
-    """
 
     app = QApplication([])
     window = MainWindow()

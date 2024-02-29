@@ -14,7 +14,7 @@ def initiate_conversation():
     config = utils.get_properties()
 
     # Writing the system prompt
-    systemPrompt = config.get('section1','system.prompt')
+    systemPrompt = config.get('prompts','system.prompt')
 
     # Add the available functions to the system prompt
     function_files = utils.list_files('.\\campaign\\functions')
@@ -28,12 +28,11 @@ def initiate_conversation():
 
     systemPrompt += f" The only existing function are {available_functions}, always call one of those functions. "
 
-    # Add the setting to the system prompt
-    if os.path.exists(".\\campaign\\settings.txt"):
-        with open(".\\campaign\\settings.txt", "r") as file:
-            settings = file.read()
-        systemPrompt += f"The setting of the TTRPG is {settings}"
+    # Add the campaign setting to the system prompt
+    settings = config.get('settings','campaign.setting')
+    systemPrompt += f"The setting of the TTRPG is {settings}"
 
+    print(systemPrompt)
     messages=[
             {"role": "system", "content": systemPrompt}
         ]
@@ -91,7 +90,7 @@ def call_model(prompt, client, messages):
     )
 
     # Handle the response
-    messages = handleAssistantResponse(response, messages)
+    messages = handleAssistantResponse(response, messages, client)
 
     return messages
 
@@ -126,7 +125,7 @@ def chat_completion_request(client, messages, tools=None, tool_choice=None):
         return e
 
 # Handle the assistant response 
-def handleAssistantResponse(response, messages):
+def handleAssistantResponse(response, messages, client):
     assistant_message = response.choices[0].message
     if assistant_message.tool_calls:
         assistant_message.content = str(assistant_message.tool_calls[0].function)
@@ -134,7 +133,32 @@ def handleAssistantResponse(response, messages):
     # Call a function if there is one
     messages.append({"role": assistant_message.role, "content": assistant_message.content})
     if assistant_message.tool_calls:
-        results = ct.execute_function_call(assistant_message)
-        messages.append({"role": "function", "tool_call_id": assistant_message.tool_calls[0].id, "name": assistant_message.tool_calls[0].function.name, "content": results})
+        results = ct.execute_function_call(assistant_message, client, messages)
+        if results:
+            messages.append({"role": "function", "tool_call_id": assistant_message.tool_calls[0].id, "name": assistant_message.tool_calls[0].function.name, "content": results})
 
     return messages
+
+# Generate a picture
+def generatePicture(client, file_path):
+    
+    # Get the description key from the file and use it to write the picture generation prompt
+    prompt = utils.get_json_key(file_path, "representation")
+
+    # Add the picture style to the prompt
+    pictureStyle = utils.get_properties().get('prompts','picture.style.prompt')
+    prompt += pictureStyle
+    print(f"prompt:{prompt}")
+    
+    # Call the OpenAI API
+    response = client.images.generate(
+    model="dall-e-2",
+    prompt=prompt,
+    size="512x512",
+    quality="standard",
+    n=1,
+    )
+
+    image_url = response.data[0].url
+
+    return image_url

@@ -1,11 +1,12 @@
 import configparser
 import tiktoken
 import os
+import json
 
-# Load properties from prompt.ini
+# Load properties from settings.ini
 def get_properties():
     config = configparser.ConfigParser()
-    config.read('prompt.ini')
+    config.read('settings.ini')
     return config
 
 def num_tokens_from_messages(messages, model):
@@ -29,6 +30,13 @@ def num_tokens_from_messages(messages, model):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
+def get_json_key(file_path, key):
+    # Get the value of a key from a json file
+    with open(file_path, 'r') as file:
+        fileContent = file.read()
+    jsonContent = json.loads(fileContent)
+    return jsonContent[key]
+
 def prune_messages(messages):
     # Remove the last message that is not a system message
     for i in range(len(messages)):
@@ -43,7 +51,6 @@ def list_files(path = ".\\campaign"):
     for r, d, f in os.walk(path):
         for file in f:
             files.append(os.path.join(r, file))
-    print(files)
     return files
 
 def createDirectoriesFromFunctions():

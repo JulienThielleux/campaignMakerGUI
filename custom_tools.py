@@ -1,36 +1,15 @@
 import json
-import sys
+import model
 from utils import list_files
 
-# this contains all the custom tools that the user can use. For now only characters, places, items and quests can be created. 
-
-"""def execute_function_call(message):
-    function_name = message.tool_calls[0].function.name
-    arguments = message.tool_calls[0].function.arguments
-
-    match function_name:
-        case "write_place":
-            results = write_place(arguments)
-        case "write_character":
-            results = write_character(arguments)
-        case "write_item":
-            results = write_item(arguments)
-        case "write_quest":
-            results = write_quest(arguments)
-        case "write_other":
-            results = write_other(arguments)
-        case _:
-            results = f"Error: function {function_name} does not exist"
-
-    return results"""
-
-def execute_function_call(message):
+# Execute the function call
+def execute_function_call(message, client, messages):
     function_name = message.tool_calls[0].function.name
     arguments = message.tool_calls[0].function.arguments
 
     # get the allowed functions from the content of the campaign/functions folder
     files = list_files('.\\campaign\\functions')
-    allowed_functions = ['write_others']
+    allowed_functions = []
     for file in files:
         # open the file and load into a json object
         with open(file, 'r') as file:
@@ -38,11 +17,38 @@ def execute_function_call(message):
         jsonContent = json.loads(txtContent)
         allowed_functions.append(jsonContent["function"]["name"])
 
+    
     if function_name in allowed_functions:
         print(f"{function_name}")
-        jsoncontent = json.loads(arguments)
-        jsoncontent["type"] = f"{function_name.split('_')[1]}"
-        results = json.dumps(jsoncontent, indent=4)
+        # Verify that all the arguments are present
+        # List all the arguments received
+        arguments_list = []
+        jsonArguments = json.loads(arguments)
+        for key in jsonArguments:
+            arguments_list.append(key)
+
+        # List all the required arguments
+        function_file_path = f'.\\campaign\\functions\\{function_name.split("_")[1]}.txt'
+        with open(function_file_path, 'r') as file:
+            txtContent = file.read()
+        jsonContent = json.loads(txtContent)
+        required_arguments = jsonContent["function"]["required"]
+
+        # Check if all the required arguments are present
+        missing_arguments = []
+        for required_argument in required_arguments:
+            if required_argument not in arguments_list:
+                missing_arguments.append(required_argument)
+
+        # If there are missing arguments, call the model back with a message to ask for the missing arguments, else call the function.
+        if missing_arguments:
+            print(f"Missing arguments: {missing_arguments}")
+            messages = model.call_model(f"Please complete with the following arguments too: {', '.join(missing_arguments)}", client, messages)
+            return None
+        else:
+            jsoncontent = json.loads(arguments)
+            jsoncontent["type"] = f"{function_name.split('_')[1]}"
+            results = json.dumps(jsoncontent, indent=4)
 
     else:
         results = f"Error: function {function_name} is not allowed"

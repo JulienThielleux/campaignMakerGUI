@@ -35,5 +35,4 @@ The user will be prompted to provide an OpenAI API key when running the program 
 - Give a valid openai API key when prompted.
 
 ## Roadmap:
-- Add picture generation for any item.
-- Add the possibility to select a setting type.
+- Give the possibility to choose which language model and which image generation model to use
