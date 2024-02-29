@@ -5,9 +5,10 @@ The project is currently a proof of concept and will undergo significant develop
 The user will be prompted to provide an OpenAI API key when running the program for the first time.
 
 ## Current Features:
-- Currently supports systematic character and places creation.
+- Supports systematic character and places creation.
 - Other requests are categorized as “others”.
-- Possibility to add different kind of generatable lore by adding files in the campaign/functions directory
+- Possibility to add different kind of generatable lore by adding files in the campaign/functions directory.
+- Support picture creation of any piece of lore with a 'representation' key.
   
 ## Interface Components:
 - Current File Window: Displays the content of existing files and allows editing.
@@ -27,6 +28,9 @@ The user will be prompted to provide an OpenAI API key when running the program 
   When the model is called, it should recognize references to previous pieces of lore in the user input.
   For instance, if King Bronn already exists in the ‘characters’ lore, typing “Write a big castle where King Bronn lives” should provide context about King Bronn to the model.
 
+- Picture window: Display the picture generated with the 'representation' key of the different pieces of lore.
+    The "save picture" button save the picture in a file with the same name as the piece of lore, as a png file.
+    The "generate picture" button call dallE-2 with the current piece of lore in the 'current file' window.
 
 ## Installation:
 - Put the CMGUI.exe file in a directory.
