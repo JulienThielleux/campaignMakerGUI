@@ -69,11 +69,12 @@ def findMatchingFiles(user_text):
     files = utils.list_files()
     for root, dirs, files in os.walk(".\\campaign"):
         for file in files:
-            file_name = file.split('.')[0]  # Remove file extension
-            file_name = file_name.replace('_', ' ')
-            if file_name in user_text:
-                with open(os.path.join(root, file), 'r') as file:
-                    contextContent += file.read() + '\n\n'
+            if file.endswith('.txt'):
+                file_name = file.split('.')[0]  # Remove file extension
+                file_name = file_name.replace('_', ' ')
+                if file_name in user_text:
+                    with open(os.path.join(root, file), 'r') as file:
+                        contextContent += file.read() + '\n\n'
     return contextContent
 
 # Call the model
@@ -98,7 +99,7 @@ def call_model(prompt, client, messages):
 @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_request(client, messages, tools=None, tool_choice=None):
 
-    model = "gpt-3.5-turbo-0613"
+    model = utils.get_properties().get('settings','campaign.language.model')
 
     # Count the tokens of the conversation
     tokenNumber = utils.num_tokens_from_messages(messages, model)
@@ -149,12 +150,15 @@ def generatePicture(client, file_path):
     pictureStyle = utils.get_properties().get('prompts','picture.style.prompt')
     prompt += pictureStyle
     print(f"prompt:{prompt}")
+
+    # Get the image model and size from the settings
+    model = utils.get_properties().get('settings','campaign.image.model')
     
     # Call the OpenAI API
     response = client.images.generate(
-    model="dall-e-2",
+    model=model,
     prompt=prompt,
-    size="512x512",
+    size='1024x1024',
     quality="standard",
     n=1,
     )

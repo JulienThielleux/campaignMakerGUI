@@ -8,7 +8,8 @@ The user will be prompted to provide an OpenAI API key when running the program 
 - Supports systematic character and places creation.
 - Other requests are categorized as “others”.
 - Possibility to add different kind of generatable lore by adding files in the campaign/functions directory.
-- Support picture creation of any piece of lore with a 'representation' key.
+- Supports picture creation of any piece of lore with a 'representation' key.
+- Possibility to choose between language models and image generation models.
   
 ## Interface Components:
 - Current File Window: Displays the content of existing files and allows editing.
@@ -39,4 +40,3 @@ The user will be prompted to provide an OpenAI API key when running the program 
 - Give a valid openai API key when prompted.
 
 ## Roadmap:
-- Give the possibility to choose which language model and which image generation model to use

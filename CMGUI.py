@@ -200,6 +200,7 @@ class MainWindow(QMainWindow):
                 with open(file_path, 'w') as file:
                     file.write(plainText)
                     QMessageBox.information(self, 'Information', 'File saved.')
+            self.current_file_path = file_path
         else:
             QMessageBox.information(self, 'Information', 'Nothing to save.')
 
